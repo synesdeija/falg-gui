@@ -1,0 +1,38 @@
+name: Test and Cache Dependencies
+
+# This action will trigger on every pull request to the main branch
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - uses: actions/checkout@v2
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      # Cache dependencies
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          echo "//npm.fontawesome.com/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" > .npmrc
+          npm ci
+
+      # Run the tests
+      - name: Run tests
+        run: npm test
